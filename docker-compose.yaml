@@ -1,0 +1,66 @@
+services:
+  web: # Next.js Frontend
+    build:
+      dockerfile: Dockerfile.web # Path to web Dockerfile
+    env_file:
+      ./apps/web/.env # Load environment variables from .env file
+    ports:
+      - "3000:8080" # Reachable on localhost:3000
+    depends_on:
+      - api # Start after the API
+    develop:
+      watch:
+        - action: sync # Synchronize the files on your host ./apps/web with your containers /app/apps/web when any file changes in that path
+          path: ./apps/web
+          target: /app/apps/web
+          ignore:
+            - node_modules/
+        - action: sync # Same as above but with component library
+          path: ./packages/ui
+          target: /app/packages/ui
+          ignore:
+            - node_modules/
+        - action: rebuild # Rebuild if the package.json changes
+          path: package.json
+        - action: rebuild
+          path: ./apps/web/package.json
+  api:
+    build:
+      dockerfile: Dockerfile.api # Path to API Dockerfile
+    ports:
+      - "3001:8080" # Reachable on localhost:3001, or api:3000 from within the Docker network
+    env_file:
+      ./apps/api/.env # Load environment variables from .env file
+    depends_on:
+      - db # Start after the database
+    
+    develop: 
+  sandbox-api:
+    build:
+      dockerfile: Dockerfile.sandbox-api # Path to API Dockerfile
+    ports:
+      - "3002:8080" # Reachable on localhost:3001, or api:3000 from within the Docker network
+    env_file:
+      ./apps/api/.env # Load environment variables from .env file
+    depends_on:
+      - db # Start after the database
+    
+    develop:
+      watch:
+        - action: sync # Synchronize the files on your host ./apps/api with your containers /app/apps/api when any file changes in that path
+          path: ./apps/api 
+          target: /app/apps/api
+          ignore:
+            - node_modules/
+        - action: rebuild # Rebuild container if the package.json changes
+          path: package.json
+        - action: rebuild
+          path: ./apps/api/package.json
+  db: # Postgres Database
+    image: postgres:16.2
+    ports:
+      - "5432:5432" # Reachable on localhost:5432 if you want to connect with something like DataGrip
+    environment: # Again, usually not a good idea to use these hardcoded credentials but okay for a nextjs-hono-monorepo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres

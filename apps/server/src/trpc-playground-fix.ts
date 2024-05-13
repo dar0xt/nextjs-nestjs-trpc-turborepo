@@ -77,6 +77,7 @@ const buildTrpcTsType = (router: AnyRouter, procedureTypes: ProcedureTypes) => {
   const procedures = router._def.procedures as Procedures;
   const procedureObject = {} as Record<string, string>;
 
+  // biome-ignore lint/complexity/noForEach: <explanation>
   Object.entries(procedures)
     // This is the main breaking change, _def.query and _def.mutation are now replaced by a _def.type field
     // This is done a couple times in this file
@@ -135,6 +136,7 @@ export const getProcedureSchemas = (procedures: Procedures) => {
   const procedureSchemas: any = { queries: {}, mutations: {} };
   const procedureTypes: ProcedureTypes = { queries: {}, mutations: {} };
 
+  // biome-ignore lint/complexity/noForEach: <explanation>
   Object.entries(procedures)
     .filter(([, { _def }]) => _def.type === "query" || _def.type === "mutation")
     .forEach(([procedureName, procedure]) => {
@@ -247,39 +249,39 @@ const defaultString = () => {
 };
 
 const defaultDate = () => {
-  return `new Date()`;
+  return "new Date()";
 };
 
 const defaultNumber = () => {
-  return `0`;
+  return "0";
 };
 
 const defaultBigInt = () => {
-  return `BigInt(0)`;
+  return "BigInt(0)";
 };
 
 const defaultBoolean = () => {
-  return `false`;
+  return "false";
 };
 
 const defaultUndefined = () => {
-  return `undefined`;
+  return "undefined";
 };
 
 const defaultNull = () => {
-  return `null`;
+  return "null";
 };
 
 const defaultObject = (def: ZodObjectDef) => {
-  let ret = `{ `;
+  let ret = "{ ";
 
   const entries = Object.entries(def.shape());
   entries.forEach(([name, propDef], idx) => {
     ret += `${name}: ${getDefaultForDef(propDef._def)}`;
-    if (idx !== entries.length - 1) ret += `, `;
-    else ret += ` `;
+    if (idx !== entries.length - 1) ret += ", ";
+    else ret += " ";
   });
-  ret += `}`;
+  ret += "}";
 
   return ret;
 };
@@ -289,11 +291,11 @@ const defaultArray = (def: ZodArrayDef) => {
 };
 
 const defaultTuple = (def: ZodTupleDef) => {
-  let ret = `[`;
+  let ret = "[";
   for (let i = 0; i < def.items.length; i++) {
     const item = def.items[i];
     ret += `${getDefaultForDef(item?._def)}`;
-    if (i !== def.items.length - 1) ret += ``;
+    if (i !== def.items.length - 1) ret += "";
   }
 
   return ret;
@@ -314,7 +316,7 @@ const defaultNullable = (def: ZodNullableDef) => {
 };
 
 const defaultOptional = (def: ZodOptionalDef) => {
-  return getDefaultForDef(def.innerType._def) ?? `undefined`;
+  return getDefaultForDef(def.innerType._def) ?? "undefined";
 };
 
 const defaultEnum = (def: ZodEnumDef) => {

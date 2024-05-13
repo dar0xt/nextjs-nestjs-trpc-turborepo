@@ -1,0 +1,177 @@
+steps:
+  # Install dependencies
+  - name: "node"
+    entrypoint: "pnpm"
+    args: ["install"]
+
+  # Build turbo
+  - name: "node"
+    entrypoint: "pnpm"
+    args: ["run", "build"]
+
+  # Build server Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/server", "./apps/server"]
+
+  # Push server Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/server"]
+
+  # Build nextjs Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/nextjs", "./apps/nextjs"]
+
+  # Push nextjs Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/nextjs"]
+
+  # Deploy server to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "server",
+        "--image",
+        "gcr.io/$PROJECT_ID/server",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+      ]
+
+  # Deploy nextjs to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "nextjs",
+        "--image",
+        "gcr.io/$PROJECT_ID/nextjs",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+      ]
+# substitutions:
+#   _SERVICE_NAME: 'aiboo'
+#   _REPOSITORY: 'github.com/dar0xt'
+#   _REGION: 'asia-northeast1'
+
+#   # Environment variables
+#   _WEB_BASE_URL: "https://aiboo-web-dev-afxyr7jnaa-an.a.run.app"
+#   _API_BASE_URL: "https://aiboo-api-dev-afxyr7jnaa-an.a.run.app"
+#   _SANDBOX_API_BASE_URL: "https://aiboo-sandbox-api-dev-afxyr7jnaa-an.a.run.app"
+#   _SUPABASE_URL: 'https://lkrzyevgztqrbxyhzdnh.supabase.co'
+#   _SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrcnp5ZXZnenRxcmJ4eWh6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM4NDI4NTgsImV4cCI6MjAyOTQxODg1OH0.Rxzmd8n_DVXjD4AgvaMsRocTBSNyxlVG6Yznk6mBuhM"
+#   _STRIPE_PUBLISHABLE_KEY: "pk_test_51PE47rAtCCNlxvJHAtcnrPKjcIMloCL7SUHrCpK9tb2o9HBJKsJic7MTpvqgYLHewfSAMJDZRAo21ESaYOCDMdF9000M2odvRn"
+
+#   _WEB_SERVICE_NAME: '${_SERVICE_NAME}-web-dev'
+#   _API_SERVICE_NAME: '${_SERVICE_NAME}-api-dev'
+#   _SANDBOX_API_SERVICE_NAME: '${_SERVICE_NAME}-sandbox-api-dev'
+#   _WEB_DOCKER_FILE_PATH: './Dockerfile.web'
+#   _API_DOCKER_FILE_PATH: './Dockerfile.api'
+#   _SANDBOX_API_DOCKER_FILE_PATH: './Dockerfile.sandbox-api'
+#   _WEB_IMAGE_TAG_NAME: 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}-web:${BUILD_ID}'
+#   _API_IMAGE_TAG_NAME: 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}-api:${BUILD_ID}'
+#   _SANDBOX_API_IMAGE_TAG_NAME: 'gcr.io/${PROJECT_ID}/${_SERVICE_NAME}sandbox-api:${BUILD_ID}'
+
+# steps:
+#   # Api
+#   # Build the container image
+#   - name: gcr.io/cloud-builders/docker
+#     secretEnv: [
+#       'DATABASE_URL',
+#       'DIRECT_URL',
+#       'ANTHROPIC_API_KEY',
+#        'STRIPE_SECRET_KEY',
+#        'STRIPE_WEBHOOK_SECRET'
+#        ]
+#     entrypoint: bash
+#     args: [
+#       '-c',
+#       'docker build -t ${_API_IMAGE_TAG_NAME} -f ${_API_DOCKER_FILE_PATH} --build-arg DIRECT_URL="$$DIRECT_URL" --build-arg DATABASE_URL="$$DATABASE_URL" --build-arg ANTHROPIC_API_KEY="$$ANTHROPIC_API_KEY" --build-arg STRIPE_SECRET_KEY="$$STRIPE_SECRET_KEY" --build-arg STRIPE_WEBHOOK_SECRET="$$STRIPE_WEBHOOK_SECRET" --build-arg API_BASE_URL=${_API_BASE_URL} --build-arg WEB_BASE_URL=${_WEB_BASE_URL} --build-arg SUPABASE_URL=${_SUPABASE_URL} --build-arg SUPABASE_ANON_KEY=${_SUPABASE_ANON_KEY} --build-arg STRIPE_PUBLISHABLE_KEY=${_STRIPE_PUBLISHABLE_KEY} .'
+#     ]
+
+#   # Push the container image to Container Registry
+#   - name: 'gcr.io/cloud-builders/docker'
+#     args: ['push', '${_API_IMAGE_TAG_NAME}']
+
+#   # Deploy container image to Cloud Run
+#   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#     entrypoint: bash
+#     args: [
+#       '-c',
+#       'gcloud run deploy ${_API_SERVICE_NAME} --image ${_API_IMAGE_TAG_NAME} --platform  managed --region ${_REGION} --allow-unauthenticated --port 8080'
+#     ]
+
+#   # Sandbox Api
+#   # Build the container image
+#   - name: gcr.io/cloud-builders/docker
+#     secretEnv: [
+#       'DATABASE_URL',
+#       'DIRECT_URL',
+#       'ANTHROPIC_API_KEY',
+#       'STRIPE_SECRET_KEY',
+#       'STRIPE_WEBHOOK_SECRET'
+#     ]
+#     entrypoint: bash
+#     args: [
+#       '-c',
+#       'docker build -t ${_API_IMAGE_TAG_NAME} -f ${_API_DOCKER_FILE_PATH} --build-arg DIRECT_URL="$$DIRECT_URL" --build-arg DATABASE_URL="$$DATABASE_URL" --build-arg ANTHROPIC_API_KEY="$$ANTHROPIC_API_KEY" --build-arg STRIPE_SECRET_KEY="$$STRIPE_SECRET_KEY" --build-arg STRIPE_WEBHOOK_SECRET="$$STRIPE_WEBHOOK_SECRET" --build-arg API_BASE_URL=${_API_BASE_URL} --build-arg WEB_BASE_URL=${_WEB_BASE_URL} --build-arg SUPABASE_URL=${_SUPABASE_URL} --build-arg SUPABASE_ANON_KEY=${_SUPABASE_ANON_KEY} --build-arg STRIPE_PUBLISHABLE_KEY=${_STRIPE_PUBLISHABLE_KEY} .'
+#     ]
+
+#   # Push the container image to Container Registry
+#   - name: 'gcr.io/cloud-builders/docker'
+#     args: ['push', '${_API_IMAGE_TAG_NAME}']
+
+#   # Deploy container image to Cloud Run
+#   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#     entrypoint: bash
+#     args: [
+#       '-c',
+#       'gcloud run deploy ${_API_SERVICE_NAME} --image ${_API_IMAGE_TAG_NAME} --platform  managed --region ${_REGION} --allow-unauthenticated --port 8080'
+#     ]
+
+#   # Web
+#   # Build the container image
+#   - name: gcr.io/cloud-builders/docker
+#     secretEnv: ['DATABASE_URL', 'DIRECT_URL']
+#     entrypoint: bash
+#     args: [
+#       '-c',
+#       'docker build -t ${_WEB_IMAGE_TAG_NAME} -f ${_WEB_DOCKER_FILE_PATH} --build-arg NEXT_PUBLIC_API_BASE_URL=${_API_BASE_URL} --build-arg NEXT_PUBLIC_WEB_BASE_URL=${_WEB_BASE_URL} --build-arg NEXT_PUBLIC_SUPABASE_URL=${_SUPABASE_URL} --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${_SUPABASE_ANON_KEY} --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_STRIPE_PUBLISHABLE_KEY} .'
+#     ]
+
+#   # Push the container image to Container Registry
+#   - name: 'gcr.io/cloud-builders/docker'
+#     args: ['push', '${_WEB_IMAGE_TAG_NAME}']
+
+#   # Deploy container image to Cloud Run
+#   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#     entrypoint: bash
+#     args: [
+#       '-c',
+#       'gcloud run deploy ${_WEB_SERVICE_NAME} --image ${_WEB_IMAGE_TAG_NAME} --platform managed --region ${_REGION} --allow-unauthenticated  --port 8080'
+#     ]
+# images:
+#   - '${_WEB_IMAGE_TAG_NAME}'
+#   - '${_API_IMAGE_TAG_NAME}'
+#   - '${_SANDBOX_API_IMAGE_TAG_NAME}'
+
+# availableSecrets:
+#   secretManager:
+#   - versionName: projects/649078383779/secrets/DATABASE_URL/versions/latest
+#     env: 'DATABASE_URL'
+#   - versionName: projects/649078383779/secrets/DIRECT_URL/versions/latest
+#     env: 'DIRECT_URL'
+#   - versionName: projects/649078383779/secrets/ANTHROPIC_API_KEY/versions/latest
+#     env: 'ANTHROPIC_API_KEY'
+#   - versionName: projects/649078383779/secrets/STRIPE_SECRET_KEY/versions/latest
+#     env: 'STRIPE_SECRET_KEY'
+#   - versionName: projects/649078383779/secrets/STRIPE_WEBHOOK_SECRET/versions/latest
+#     env: 'STRIPE_WEBHOOK_SECRET'
+

@@ -13,6 +13,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   const [apiClient] = useState(() =>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     api.createClient({
       links: [
         loggerLink({
@@ -21,7 +22,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             (op.direction === "down" && op.result instanceof Error),
         }),
         unstable_httpBatchStreamLink({
-          url: getBaseUrl() + "/api/trpc",
+          url: `${getBaseUrl()}/api/trpc`,
           async headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");

@@ -1,8 +1,6 @@
+import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { NestFactory } from "@nestjs/core";
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from "@nestjs/platform-fastify";
+import { FastifyAdapter } from "@nestjs/platform-fastify";
 import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 
 import { AppContextFactory, AppModule, AppRouterFactory } from "@acme/api";
@@ -39,7 +37,7 @@ async function bootstrap() {
     });
   }
 
-  await app.listen(4000, "0.0.0.0");
+  await app.listen(4000);
 }
 
 bootstrap();

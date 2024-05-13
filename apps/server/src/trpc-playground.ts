@@ -1,4 +1,4 @@
-import { AnyTRPCRouter } from "@trpc/server";
+import type { AnyTRPCRouter } from "@trpc/server";
 import { getFastifyPlugin } from "trpc-playground/handlers/fastify";
 
 import { TRPC_ENDPOINT, TRPC_PLAYGROUND_ENDPOINT } from "./constants";
