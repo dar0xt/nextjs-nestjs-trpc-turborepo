@@ -1,4 +1,8 @@
 steps:
+  - name: "node"
+    entrypoint: "npm"
+    args: ["install", "-g", "pnpm"]
+
   # Install dependencies
   - name: "node"
     entrypoint: "pnpm"
